@@ -47,6 +47,7 @@ period=30  -- 30 = 1 sec
 --map tile settings
  wall={22,23,24,25,26,27,28,29,20,21,32,12,13,14,15,35,36,37,38}
  pushable={16,20,21,32}
+	destroyable={18,21,31,39,40}
  key={19}
  door={22}
  battery={18}
@@ -192,6 +193,7 @@ function make_player()
  p.inmotion=false
  p.direction="⬇️"
  p.battery=0
+ p.shottimer=0
 
 end
 
@@ -203,16 +205,34 @@ function draw_player()
 	end
 end
 
+function direction()
+	if (btn(⬆️)) then return "⬆️"
+	elseif (btn(⬇️)) then return "⬇️"
+	elseif (btn(⬅️)) then return "⬅️"
+	elseif (btn(➡️)) then return "➡️"
+	else
+		return false
+	end
+end	
+
+
+
 function move_player()
+--printh(p.shottimer.." t: "..timer)
 	local movetime = false
+	if (p.shottimer == timer) p.shottimer = 0
+
  p.inmotion = false
 	if (timer%4==0) movetime=true
  newx=p.x
  newy=p.y
 
 --testing 
- if (btn(❎) and movetime==true) then
- 	add_bullet(p.x,p.y,p.direction,0)
+ if (btn(❎) and direction() and p.shottimer==0) then
+ printh(p.x.."x"..p.y.." "..direction())
+ 	add_bullet(p.x,p.y,direction(),0)
+ 	p.shottimer = timer
+ 	p.direction = direction()
  	sfx(8)
  end	
  
@@ -409,12 +429,12 @@ function draw_bullet(shot)
 		local sprite=35
 		if (shot.direction == "⬆️" or shot.direction == "⬇️") sprite=35
 		if (shot.direction == "⬅️" or shot.direction == "➡️") sprite=37
-if (shot.variant~=1) mset(shot.x,shot.y,0)	
+	if (shot.variant~=1) mset(shot.x,shot.y,0)
 		mset(shot.newx,shot.newy,sprite)
 		shot.x = shot.newx
 		shot.y = shot.newy
 	else
-		printh("shot: "..shot.x.."x"..shot.y.." pl: "..p.x.."x"..p.y)
+--		printh("shot: "..shot.x.."x"..shot.y.." pl: "..p.x.."x"..p.y)
 			if (shot.x == p.x and shot.y == p.y)	then 
 				mset(shot.x,shot.y,0)
 			else 
