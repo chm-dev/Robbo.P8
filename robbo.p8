@@ -5,737 +5,703 @@ __lua__
 --remake
 
 function _init()
- map_setup()
- make_player()
- 
- game_win=false
- game_over=false
+	map_setup()
+	make_player()
+
+	game_win = false
+	game_over = false
 end
 
 function _update()
 	global_timer()
---	if (not game_over) then
-		update_map()
-		player_control()
-		check_win_lose()
---	end
-	
+	--	if (not game_over) then
+	update_map()
+	player_control()
+	check_win_lose()
+	--	end
 end
 
 function _draw()
 	cls()
---	if (not game_over) then
-		draw_map()
-		draw_player()
-		show_inventory()
---	else
---		draw_win_lose()
---	end
+	--	if (not game_over) then
+	draw_map()
+	draw_player()
+	show_inventory()
+	--	else
+	--		draw_win_lose()
+	--	end
 end
-
 
 -->8
 --map code
-mapx=0
-new_mapx=0
-mapy=0
-new_mapy=0
+mapx = 0
+new_mapx = 0
+mapy = 0
+new_mapy = 0
 m = {}
 m.cannons = {}
 m.bolts = 0
-m.teleports={{},{},{},{}}
+m.teleports = { {}, {}, {}, {} }
 
 function map_setup()
- --timers
- timer=0
- period=30  -- 30 = 1 sec
- 
- --map tile settings
-  wall={16,17,18,19,22,23,24,25,26,27,28,29,20,21,32,12,13,14,15,35,36,37,38,31,39,40,41,42,43,44,45,46,50,51,52,53}
-  pushable={16,20,21,32}
-  --can be destroyed in explosion
-  destructable={16,17,18,19,20,31,39,40,39,40,41,42,43,44,45,46}
-  --can be destroyed by bullet
-  shootable={18,20,31,39,40,41,42,43,44,45,46}
-  explodable={21}
-  key={19}
-  door={22}
-  battery={18}
-  teleport={23,24}
-  bolt={17}
-  anim1={23,33,35,37,39,41,43,45}
-  anim2={24,34,36,38,40,42,44,46}
-  perish_frames={12,13,14,15}
-  lose={}
-  win={33,34}
-  cannon={50,51,52,53}
-  lcannon={51}
-  rcannon={50}
-  dcannon={53}
-  ucannon={52}
-  bullet={35,36,37,38}
-  map_init()
- end
+	--timers
+	timer = 0
+	period = 30
+	-- 30 = 1 sec
 
-
-function add_cannon(x,y,direction,variant)
-	add(m.cannons,{x=x,y=y,direction=direction,variant=variant})
- printh("adding cannon "..x.."x"..y.." "..direction)
+	--map tile settings
+	wall = { 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28, 29, 20, 21, 32, 12, 13, 14, 15, 35, 36, 37, 38, 31, 39, 40, 41, 42, 43, 44, 45, 46, 50, 51, 52, 53 }
+	pushable = { 16, 20, 21, 32 }
+	--can be destroyed in explosion
+	destructable = { 16, 17, 18, 19, 20, 31, 39, 40, 39, 40, 41, 42, 43, 44, 45, 46 }
+	--can be destroyed by bullet
+	shootable = { 18, 20, 31, 39, 40, 41, 42, 43, 44, 45, 46 }
+	explodable = { 21 }
+	key = { 19 }
+	door = { 22 }
+	battery = { 18 }
+	teleport = { 23, 24 }
+	bolt = { 17 }
+	anim1 = { 23, 33, 35, 37, 39, 41, 43, 45 }
+	anim2 = { 24, 34, 36, 38, 40, 42, 44, 46 }
+	perish_frames = { 12, 13, 14, 15 }
+	lose = {}
+	win = { 33, 34 }
+	cannon = { 50, 51, 52, 53 }
+	lcannon = { 51 }
+	rcannon = { 50 }
+	dcannon = { 53 }
+	ucannon = { 52 }
+	bullet = { 35, 36, 37, 38 }
+	map_init()
 end
 
-function add_teleport(x,y,number)
-	add(m.teleports[number],{x=x,y=y})
- printh("adding teleport "..x.."x"..y.." - "..number)
+function add_cannon(x, y, direction, variant)
+	add(m.cannons, { x = x, y = y, direction = direction, variant = variant })
+	printh("adding cannon " .. x .. "x" .. y .. " " .. direction)
 end
 
+function add_teleport(x, y, number)
+	add(m.teleports[number], { x = x, y = y })
+	printh("adding teleport " .. x .. "x" .. y .. " - " .. number)
+end
 
 function map_init()
- for x=mapx,mapx+15 do
-		for y=mapy, mapy+30 do
-   --cannons
-			if (is_tile(lcannon,x,y)) then add_cannon(x,y,"⬅️",1)
-   elseif (is_tile(rcannon,x,y)) then add_cannon(x,y,"➡️",1)
-			elseif (is_tile(dcannon,x,y)) then add_cannon(x,y,"⬇️",1)
-   elseif (is_tile(ucannon,x,y)) then add_cannon(x,y,"⬆️",1)   
-   elseif (is_tile(bolt,x,y)) then m.bolts += 1
-   
-   elseif (is_tile(teleport,x,y)) then add_teleport(x,y,1)
-   end
-			
+	for x = mapx, mapx + 15 do
+		for y = mapy, mapy + 30 do
+			--cannons
+			if is_tile(lcannon, x, y) then
+				add_cannon(x, y, "⬅️", 1)
+			elseif is_tile(rcannon, x, y) then
+				add_cannon(x, y, "➡️", 1)
+			elseif is_tile(dcannon, x, y) then
+				add_cannon(x, y, "⬇️", 1)
+			elseif is_tile(ucannon, x, y) then
+				add_cannon(x, y, "⬆️", 1)
+			elseif is_tile(bolt, x, y) then
+				m.bolts += 1
+			elseif is_tile(teleport, x, y) then
+				add_teleport(x, y, 1)
+			end
 		end
 	end
-
 end
-
-
-
-
-
-
 
 function update_map()
-	if (timer%3==0)	perish_animation()
-	if (timer%4==0)	update_bullets()
-	if (timer%10==0) toggle_tiles()
-	
-
-
+	if (timer % 3 == 0) perish_animation()
+	if (timer % 4 == 0) update_bullets()
+	if (timer % 10 == 0) toggle_tiles()
 end
 
-
-
 function draw_map()
-	map(0,0,0,0,16,31)
+	map(0, 0, 0, 0, 16, 31)
 end
 
 function pan_camera()
---new_mapx=flr(p.x/16)*16
---new_mapy=flr(p.y/14)*14
---printh(mapy..", "..p.y)
-if (p.y-new_mapy > 10) new_mapy+=6
-if (p.y-new_mapy < 5) new_mapy-=6
-
-new_mapy=mid(0,new_mapy,17)
-	if (mapx ~= new_mapx) then
-	 if(mapx > new_mapx) then
-		 mapx-=0.5
-	 else 
- 	 mapx+=0.5
-	 end
-	end
- 
- if (mapy ~= new_mapy) then
-	 if(mapy > new_mapy) then 
-	 	mapy-=0.125
-			mapy=mid(new_mapy,mapy,17)
-	 else 
-	 	mapy+=0.125
-			mapy=mid(0,mapy,new_mapy)
-		end 
-
+	--new_mapx=flr(p.x/16)*16
+	--new_mapy=flr(p.y/14)*14
+	--printh(mapy..", "..p.y)
+	if (p.y - new_mapy > 10) new_mapy += 6
+	if (p.y - new_mapy < 5) new_mapy -= 6
+	new_mapy = mid(0, new_mapy, 17)
+	if mapx ~= new_mapx then
+		if mapx > new_mapx then
+			mapx -= 0.5
+		else
+			mapx += 0.5
+		end
 	end
 
- camera(mapx*8,mapy*8)
+	if mapy ~= new_mapy then
+		if mapy > new_mapy then
+			mapy -= 0.125
+			mapy = mid(new_mapy, mapy, 17)
+		else
+			mapy += 0.125
+			mapy = mid(0, mapy, new_mapy)
+		end
+	end
 
-
+	camera(mapx * 8, mapy * 8)
 end
 
+function is_tile(tile_type, x, y)
+	tile = mget(x, y)
+	--has_flag=fget(tile,tile_type)
+	for i = 1, #tile_type do
+		if (tile == tile_type[i]) return true
+	end
 
-function is_tile(tile_type,x,y)
- tile=mget(x,y)
- --has_flag=fget(tile,tile_type)
- for i=1,#tile_type do
- 	if (tile==tile_type[i]) return true
- end
- 
- return false
+	return false
 end
 
-function can_move(x,y)
-	return not is_tile(wall,x,y)
+function can_move(x, y)
+	return not is_tile(wall, x, y)
 end
 
-function can_push(x,y)
-	if (mget(x,y) == 0) then
-	 return true
-	else 
+function can_push(x, y)
+	if mget(x, y) == 0 then
+		return true
+	else
 		return false
 	end
-	
 end
 
-function delete_tile(x,y)
- mset(x,y,0)
+function delete_tile(x, y)
+	mset(x, y, 0)
 end
 
-function swap_tile(x,y)
- tile=mget(x,y)
- mset(x,y,tile+1)
+function swap_tile(x, y)
+	tile = mget(x, y)
+	mset(x, y, tile + 1)
 end
 
-function unswap_tile(x,y)
- tile=mget(x,y)
- mset(x,y,tile-1)
+function unswap_tile(x, y)
+	tile = mget(x, y)
+	mset(x, y, tile - 1)
 end
 
-function get_key(x,y)
-	p.keys+=1
-	delete_tile(x,y)
- sfx(2)
+function get_key(x, y)
+	p.keys += 1
+	delete_tile(x, y)
+	sfx(2)
 end
 
-function get_bolt(x,y)
-	m.bolts-=1
-	delete_tile(x,y)
- sfx(11)
+function get_bolt(x, y)
+	m.bolts -= 1
+	delete_tile(x, y)
+	sfx(11)
 end
 
-
-
-function get_battery(x,y)
-	p.battery+=9
-	delete_tile(x,y)
+function get_battery(x, y)
+	p.battery += 9
+	delete_tile(x, y)
 	sfx(5)
 end
 
-function open_door(x,y)
- p.keys-=1
- delete_tile(x,y)
- sfx(3)
+function open_door(x, y)
+	p.keys -= 1
+	delete_tile(x, y)
+	sfx(3)
 end
 
-function push_pushable(x,y)
-	local dx=0
-	local dy=0
-	if (p.direction == "➡️") dx=1
-	if (p.direction == "⬅️") dx=-1
-	if (p.direction == "⬇️") dy=1
-	if (p.direction == "⬆️") dy=-1
- if (can_push(x+dx,y+dy)) then
-		tile=	mget(x,y)
-		delete_tile(x,y)
-		mset(x+dx,y+dy,tile)
+function push_pushable(x, y)
+	local dx = 0
+	local dy = 0
+	if (p.direction == "➡️") dx = 1
+	if (p.direction == "⬅️") dx = -1
+	if (p.direction == "⬇️") dy = 1
+	if (p.direction == "⬆️") dy = -1
+	if can_push(x + dx, y + dy) then
+		tile = mget(x, y)
+		delete_tile(x, y)
+		mset(x + dx, y + dy, tile)
 		sfx(6)
 	end
- 
 end
 
 -- c = current teleport index
-function teleport_to(c,group)
- local n = 0 --next teleport index
- if (c >= #m.teleports[group]) then
-  n=1
- else
-  n=c+1
- end
- targetx = m.teleports[group][n].x
- targety = m.teleports[group][n].y
-	
-local ac = advance_in_direction(targetx,targety,direction())
-	printh(ac.x.."x"..ac.y)		
-if (can_move(ac.x,ac.y)) then
-  return {found=true,tindex=n,x=ac.x,y=ac.y} 
- else
-  for j=1,#directions do
-   local ac = advance_in_direction(targetx,targety,directions[j])
-    if (can_move(ac.x,ac.y)) then
-     return {found=true,tindex=n,x=ac.x,y=ac.y}	
-    end	 		 
-   end
-
-  end
-  return {found=false,tindex=n,x=p.x,y=p.y}
-end
-
-function player_teleport2(x,y)
-	for i=1,#m.teleports[1] do
-		local t = m.teleports[1][i]
-		local targetx = 0
-		local targety = 0
-			
-			if (t.x == x and t.y == y) then
-    repeat
-     local tt = teleport_to(i,1)
-		 newx = tt.x
-		 newy = tt.y 
-		 mset(p.x,p.y,12)
-		 sfx(12)
-     if (not tt.found) i+=1
-    until tt.found
-
-		end
-		
+function teleport_to(c, group)
+	local n = 0
+	--next teleport index
+	if c >= #m.teleports[group] then
+		n = 1
+	else
+		n = c + 1
 	end
-end
+	targetx = m.teleports[group][n].x
+	targety = m.teleports[group][n].y
 
-
-function player_teleport(x,y)
-	for i=1,#m.teleports[1] do
-		local t = m.teleports[1][i]
-		local targetx = 0
-		local targety = 0
-		local exit=false	
-			if (t.x == x and t.y == y) then
-				
-				if (i >= #m.teleports[1]) then
-					targetx = m.teleports[1][1].x
-					targety = m.teleports[1][1].y
-				else
-					targetx = m.teleports[1][i+1].x
-					targety = m.teleports[1][i+1].y
+	local ac = advance_in_direction(targetx, targety, direction())
+	printh(ac.x .. "x" .. ac.y)
+	if can_move(ac.x, ac.y) then
+		return { found = true, tindex = n, x = ac.x, y = ac.y }
+	else
+		for j = 1, #directions do
+			local ac = advance_in_direction(targetx, targety, directions[j])
+			if can_move(ac.x, ac.y) then
+				return { found = true, tindex = n, x = ac.x, y = ac.y }
 			end
-		
-			mset(p.x,p.y,12)
-			local ac = advance_in_direction(targetx,targety,direction())
-			
-			if (can_move(ac.x,ac.y)) then
-				p.x = ac.x
-				p.y = ac.y 
-				exit = true
-		 else 
-		 	for j=1,#directions do
-		 	local ac = advance_in_direction(targetx,targety,directions[j])
-		 		if (can_move(ac.x,ac.y)) then
-		 			p.x = ac.x
-		 			p.y = ac.y
-		 			exit = true
-		 			break	
-		 		end	 		 
-		 	end
-		 end
-		 sfx(12)
+		end
 	end
-	end	
+	return { found = false, tindex = n, x = p.x, y = p.y }
+end
+
+function player_teleport2(x, y)
+	for i = 1, #m.teleports[1] do
+		local t = m.teleports[1][i]
+		local targetx = 0
+		local targety = 0
+
+		if t.x == x and t.y == y then
+			repeat
+				local tt = teleport_to(i, 1)
+				newx = tt.x
+				newy = tt.y
+				mset(p.x, p.y, 12)
+				sfx(12)
+				if (not tt.found) i += 1
+			until tt.found
+		end
+	end
+end
+
+function player_teleport(x, y)
+	for i = 1, #m.teleports[1] do
+		local t = m.teleports[1][i]
+		local targetx = 0
+		local targety = 0
+		local exit = false
+		if t.x == x and t.y == y then
+			if i >= #m.teleports[1] then
+				targetx = m.teleports[1][1].x
+				targety = m.teleports[1][1].y
+			else
+				targetx = m.teleports[1][i + 1].x
+				targety = m.teleports[1][i + 1].y
+			end
+
+			mset(p.x, p.y, 12)
+			local ac = advance_in_direction(targetx, targety, direction())
+
+			if can_move(ac.x, ac.y) then
+				p.x = ac.x
+				p.y = ac.y
+				exit = true
+			else
+				for j = 1, #directions do
+					local ac = advance_in_direction(targetx, targety, directions[j])
+					if can_move(ac.x, ac.y) then
+						p.x = ac.x
+						p.y = ac.y
+						exit = true
+						break
+					end
+				end
+			end
+			sfx(12)
+		end
+	end
 end
 -->8
 --player code
 
-directions = {"⬆️","⬇️","⬅️","➡️"}
+directions = { "⬆️", "⬇️", "⬅️", "➡️" }
 
 function make_player()
- p={}
- p.x=14
- p.y=2
- p.sprite=1
- p.keys=0
- p.mvspr= --move sprites
- 	{down=2,
-			up=4,
-			right=6,
-			left=8}
- p.inmotion=false
- p.direction="⬇️"
- p.battery=0
- p.shottimer=0
-
+	p = {}
+	p.x = 14
+	p.y = 2
+	p.sprite = 1
+	p.keys = 0
+	p.mvspr =
+		--move sprites
+		{
+			down = 2,
+			up = 4,
+			right = 6,
+			left = 8
+		}
+	p.inmotion = false
+	p.direction = "⬇️"
+	p.battery = 0
+	p.shottimer = 0
 end
 
 function draw_player()
-	if (p.inmotion)	then 
-		anim(p,p.sprite,2,5)
-	else 
-		spr(p.sprite,p.x*8,p.y*8)
+	if p.inmotion then
+		anim(p, p.sprite, 2, 5)
+	else
+		spr(p.sprite, p.x * 8, p.y * 8)
 	end
 end
 
 function direction()
-	if (btn(⬆️)) then return "⬆️"
-	elseif (btn(⬇️)) then return "⬇️"
-	elseif (btn(⬅️)) then return "⬅️"
-	elseif (btn(➡️)) then return "➡️"
+	if btn(⬆️) then
+		return "⬆️"
+	elseif btn(⬇️) then
+		return "⬇️"
+	elseif btn(⬅️) then
+		return "⬅️"
+	elseif btn(➡️) then
+		return "➡️"
 	else
 		return false
 	end
-end	
-
-
-
-function player_control()
---printh(p.shottimer.." t: "..timer)
-	local movetime = false
-	if (p.shottimer == timer) p.shottimer = 0
-
- p.inmotion = false
-	if (timer%4==0) movetime=true
- newx=p.x
- newy=p.y
-
---testing 
-
-if (btn(⬅️) and btn(➡️)) then
-			printh(#shots..":")
-			foreach(shots, 
-				function(shot)
-					printh(shot.x.."x"..shot.y.." var: "..shot.variant)
-					if (shot.retract) printh("retracting")
-				end
-			)
-		end
-
- if (btn(❎) and direction() and p.shottimer==0) then
- --printh(p.x.."x"..p.y.." "..direction())
- 	add_bullet(p.x,p.y,direction(),0)
- 	p.shottimer = timer
- 	p.direction = direction()
- 	sfx(8)
- end	
- 
-	
-	if (btn(❎)) movetime=false
-	
-	if (btn(🅾️)) then 
-		
-  foreach(m.cannons, 
-		function(c) 
---			printh("x"..shot.x.."y"..shot.y.." dir:"..shot.direction)
-   add_bullet(c.x, c.y,c.direction,c.variant)
-   sfx(7)
-		end
-	)
-
-	end
---/testing
- 
- if (btn(⬅️)) then 
-		p.inmotion = true 
-		p.sprite = p.mvspr.left
-		p.direction="⬅️"
-		if (movetime) newx-=1
-
- elseif (btn(➡️)) then 
-		p.inmotion = true 
-		p.sprite = p.mvspr.right
-		p.direction="➡️"
-		if (movetime) newx+=1
-
- elseif (btn(⬆️)) then 
-		p.inmotion = true 
-		p.sprite = p.mvspr.up
-		p.direction="⬆️"
-		if (movetime) newy-=1
-
- elseif (btn(⬇️)) then 
-		p.inmotion = true 
-		p.sprite = p.mvspr.down
-		p.direction="⬇️"
-	 if (movetime) newy+=1
-
- end
-
-	interact(newx,newy)
-
- if (can_move(newx,newy)) then
-  if	((p.x ~= newx) or (p.y ~= newy)) sfx(0)
-  p.x=mid(0,newx,15)
-  p.y=mid(0,newy,30)
- else
-  sfx(1)
- end
-
-pan_camera()
-
 end
 
-function interact(x,y)
---printh(mget(x,y))
- if (is_tile(key,x,y)) then
-  get_key(x,y)
- elseif (is_tile(door,x,y) and p.keys>0) then
-  open_door(x,y)
- elseif (is_tile(pushable,x,y)) then
- 	push_pushable(x,y)
- elseif (is_tile(battery,x,y)) then
- 	get_battery(x,y)
- elseif (is_tile(bolt,x,y)) then  	 
-		get_bolt(x,y)
-	elseif (is_tile(teleport,x,y)) then	
-		player_teleport2(x,y)
- end 
-end 
+function player_control()
+	--printh(p.shottimer.." t: "..timer)
+	local movetime = false
+	if (p.shottimer == timer) p.shottimer = 0
+	p.inmotion = false
+	if (timer % 4 == 0) movetime = true
+	newx = p.x
+	newy = p.y
 
- 
+	--testing
+
+	if btn(⬅️) and btn(➡️) then
+		printh(#shots .. ":")
+		foreach(
+			shots,
+			function(shot)
+				printh(shot.x .. "x" .. shot.y .. " var: " .. shot.variant)
+				if (shot.retract) printh("retracting")
+			end
+		)
+	end
+
+	if btn(❎) and direction() and p.shottimer == 0 then
+		--printh(p.x.."x"..p.y.." "..direction())
+		add_bullet(p.x, p.y, direction(), 0)
+		p.shottimer = timer
+		p.direction = direction()
+		sfx(8)
+	end
+
+	if (btn(❎)) movetime = false
+	if btn(🅾️) then
+		foreach(
+			m.cannons,
+			function(c)
+				--			printh("x"..shot.x.."y"..shot.y.." dir:"..shot.direction)
+				add_bullet(c.x, c.y, c.direction, c.variant)
+				sfx(7)
+			end
+		)
+	end
+	--/testing
+
+	if btn(⬅️) then
+		p.inmotion = true
+		p.sprite = p.mvspr.left
+		p.direction = "⬅️"
+		if (movetime) newx -= 1
+	elseif btn(➡️) then
+		p.inmotion = true
+		p.sprite = p.mvspr.right
+		p.direction = "➡️"
+		if (movetime) newx += 1
+	elseif btn(⬆️) then
+		p.inmotion = true
+		p.sprite = p.mvspr.up
+		p.direction = "⬆️"
+		if (movetime) newy -= 1
+	elseif btn(⬇️) then
+		p.inmotion = true
+		p.sprite = p.mvspr.down
+		p.direction = "⬇️"
+		if (movetime) newy += 1
+	end
+
+	interact(newx, newy)
+
+	if can_move(newx, newy) then
+		if (p.x ~= newx or p.y ~= newy) sfx(0) p.x = mid(0, newx, 15)
+		p.y = mid(0, newy, 30)
+	else
+		sfx(1)
+	end
+
+	pan_camera()
+end
+
+function interact(x, y)
+	--printh(mget(x,y))
+	if is_tile(key, x, y) then
+		get_key(x, y)
+	elseif is_tile(door, x, y) and p.keys > 0 then
+		open_door(x, y)
+	elseif is_tile(pushable, x, y) then
+		push_pushable(x, y)
+	elseif is_tile(battery, x, y) then
+		get_battery(x, y)
+	elseif is_tile(bolt, x, y) then
+		get_bolt(x, y)
+	elseif is_tile(teleport, x, y) then
+		player_teleport2(x, y)
+	end
+end
+
 -->8
 --inventory code
 
 function show_inventory()
-	invx=mapx*8
-	invy=mapy*8+114
+	invx = mapx * 8
+	invy = mapy * 8 + 114
 
-	rectfill(invx,invy,invx+126,invy+13,0) 
-	rect(invx,invy-2,invx+127,invy+12,6)
- rect(invx+1,invy-1,invx+126,invy+11,5)
+	rectfill(invx, invy, invx + 126, invy + 13, 0)
+	rect(invx, invy - 2, invx + 127, invy + 12, 6)
+	rect(invx + 1, invy - 1, invx + 126, invy + 11, 5)
 
---bolts
-	spr(75,invx+3,invy+1)
-	draw_number(m.bolts, invx+11,invy+2)
---keys
- 	spr(77,invx+27,invy+1)
- 	draw_number(p.keys, invx+36,invy+2)
---battery
- 	spr(78,invx+52,invy+1)
- 	draw_number(p.battery, invx+60,invy+2)
---lifes
- 	spr(76,invx+77,invy+1)
- 	draw_number(p.keys, invx+86,invy+2)
---level
- 	spr(79,invx+102,invy+1)
- 	draw_number(p.keys, invx+112,invy+2)
+	--bolts
+	spr(75, invx + 3, invy + 1)
+	draw_number(m.bolts, invx + 11, invy + 2)
+	--keys
+	spr(77, invx + 27, invy + 1)
+	draw_number(p.keys, invx + 36, invy + 2)
+	--battery
+	spr(78, invx + 52, invy + 1)
+	draw_number(p.battery, invx + 60, invy + 2)
+	--lifes
+	spr(76, invx + 77, invy + 1)
+	draw_number(p.keys, invx + 86, invy + 2)
+	--level
+	spr(79, invx + 102, invy + 1)
+	draw_number(p.keys, invx + 112, invy + 2)
 end
 
-function draw_number(num,x,y)
+function draw_number(num, x, y)
 	n_str = tostring(num)
-	if (num > 10) then
-		d1=tonum(sub(n_str,1,1))
-		d2=tonum(sub(n_str,2,2))
+	if num > 10 then
+		d1 = tonum(sub(n_str, 1, 1))
+		d2 = tonum(sub(n_str, 2, 2))
 	else
-	 d1=0
-	 d2=tonum(num)
+		d1 = 0
+		d2 = tonum(num)
 	end
-	spr(65+d1,x,y)
-	spr(65+d2,x+6,y)
+	spr(65 + d1, x, y)
+	spr(65 + d2, x + 6, y)
 end
-
 
 -->8
 --animation code
 
 function toggle_tiles()
-	for x=0,15 do
-		for y=0,30 do
-			if (is_tile(anim1,x,y)) then
-				swap_tile(x,y)
-			elseif (is_tile(anim2,x,y)) then
-				unswap_tile(x,y)
+	for x = 0, 15 do
+		for y = 0, 30 do
+			if is_tile(anim1, x, y) then
+				swap_tile(x, y)
+			elseif is_tile(anim2, x, y) then
+				unswap_tile(x, y)
 			end
 		end
 	end
-end	
+end
 
 --object, start frame,
 --num frames, speed, flip
 --taken from: https://www.lexaloffle.com/bbs/?tid=3115&autoplay=1#pp
-function anim(o,sf,nf,sp,fl)
-    if(not o.a_ct) o.a_ct=0
-    if(not o.a_st)    o.a_st=0
+function anim(o, sf, nf, sp, fl)
+	if (not o.a_ct) o.a_ct = 0
+	if (not o.a_st) o.a_st = 0
+	o.a_ct += 1
 
-    o.a_ct+=1
+	if o.a_ct % 30 / sp == 0 then
+		o.a_st += 1
+		if (o.a_st == nf) o.a_st = 0
+	end
 
-    if(o.a_ct%(30/sp)==0) then
-     o.a_st+=1
-     if(o.a_st==nf) o.a_st=0
-    end
-
-    o.a_fr=sf+o.a_st
-    spr(o.a_fr,o.x*8,o.y*8,1,1,fl)
+	o.a_fr = sf + o.a_st
+	spr(o.a_fr, o.x * 8, o.y * 8, 1, 1, fl)
 end
 
 function perish_animation()
-	for x=0,15 do
-		for y=0,30 do
-			tile=mget(x,y)
-		 for i=1,#perish_frames+1 do
-    --advance to next frame
-		 	if (tile==perish_frames[i] and i <= #perish_frames) then
-		 		mset(x,y,perish_frames[i+1])		 	 
-    --remove if last frame
-		 	elseif (tile==perish_frames[i] and i == #perish_frames+1) then 
-		 		mset(x,y,0)
-		 	end
-		 end
- 	end
+	for x = 0, 15 do
+		for y = 0, 30 do
+			tile = mget(x, y)
+			for i = 1, #perish_frames + 1 do
+				--advance to next frame
+				if tile == perish_frames[i] and i <= #perish_frames then
+					mset(x, y, perish_frames[i + 1])
+					--remove if last frame
+				elseif tile == perish_frames[i] and i == #perish_frames + 1 then
+					mset(x, y, 0)
+				end
+			end
+		end
 	end
-
-
 end
 
 function global_timer()
-	if (timer<=1) timer=period+1
-	timer-=1
+	if (timer <= 1) timer = period + 1
+	timer -= 1
 end
 -->8
 --win/lose code
 
 function check_win_lose()
-	if (is_tile(win,p.x,p.y)) then
-		game_win=true
-		game_over=true
-	elseif (is_tile(lose,p.x,p.y)) then
-		game_win=false
-		game_over=true
+	if is_tile(win, p.x, p.y) then
+		game_win = true
+		game_over = true
+	elseif is_tile(lose, p.x, p.y) then
+		game_win = false
+		game_over = true
 	end
 end
 
 function draw_win_lose()
 	camera()
-	if (game_win) then
+	if game_win then
 		sfx(4)
-		print("★ planeta ukonczona",37,64,7)
+		print("★ planeta ukonczona", 37, 64, 7)
 	else
-		print("biedny robbo !",38,64,7)		
-	end		
+		print("biedny robbo !", 38, 64, 7)
+	end
 end
 -->8
 --projectiles code
 
-shots={}
+shots = {}
 
-function add_bullet(x,y,direction,variant)
-	splace=advance_in_direction(x,y,direction)
-	if (can_move(splace.x,splace.y) or is_tile(shootable,splace.x,splace.y) or is_tile(explodable,splace.x,splace.y)) then
-		add(shots,{x=x,y=y,direction=direction,variant=variant,retract=false})	
+function add_bullet(x, y, direction, variant)
+	splace = advance_in_direction(x, y, direction)
+	if can_move(splace.x, splace.y) or is_tile(shootable, splace.x, splace.y) or is_tile(explodable, splace.x, splace.y) then
+		add(shots, { x = x, y = y, direction = direction, variant = variant, retract = false })
 	end
 end
-
-
 
 function draw_bullet(shot)
-	if (not shot.newx) shot.newx=shot.x
-	if (not shot.newy) shot.newy=shot.y
---printh(can_move(shot.newx,shot.newy))
-
---draw bullet		
-if(not shot.retract and can_move(shot.newx,shot.newy)) then
- local sprite=35
- if (shot.direction == "⬆️" or shot.direction == "⬇️") sprite=35
- if (shot.direction == "⬅️" or shot.direction == "➡️") sprite=37
- if ((shot.variant~=1) and is_tile(bullet,shot.x,shot.y)) then 
---  printh(mget(shot.x, shot.y))
---  printh(is_tile(bullet,shot.x,shot.y))
-  mset(shot.x,shot.y,0)  
- end
- mset(shot.newx,shot.newy,sprite)
- shot.x = shot.newx
- shot.y = shot.newy
-
- --retract mode
- elseif(shot.variant==1 and shot.retract) then
-		if is_tile(bullet,shot.newx,shot.newy) then
-	--		printh("bullet, x:"..shot.x.." y:"..shot.y.."new "..shot.newx.."x"..shot.newy)
-			mset(shot.x,shot.y,0)
-			shot.x = shot.newx
-		 shot.y = shot.newy
-		elseif is_tile(cannon,shot.newx,shot.newy) then
-	--		printh("cannon! removing, x:"..shot.x.." y:"..shot.y.."new "..shot.newx.."x"..shot.newy)
-			if (not is_tile(cannon, shot.x,shot.y)) mset(shot.x,shot.y,14)
-			del(shots,shot)
+	if (not shot.newx) shot.newx = shot.x
+	if (not shot.newy) shot.newy = shot.y
+	--printh(can_move(shot.newx,shot.newy))
+	--draw bullet
+	if not shot.retract and can_move(shot.newx, shot.newy) then
+		local sprite = 35
+		if (shot.direction == "⬆️" or shot.direction == "⬇️") sprite = 35 if (shot.direction == "⬅️" or shot.direction == "➡️") sprite = 37 if shot.variant ~= 1 and is_tile(bullet, shot.x, shot.y) then
+			--  printh(mget(shot.x, shot.y))
+			--  printh(is_tile(bullet,shot.x,shot.y))
+			mset(shot.x, shot.y, 0)
 		end
-	
---shootable hit 
-	elseif(is_tile(shootable,shot.newx,shot.newy)) then
-		mset(shot.x,shot.y,0)
-		mset(shot.newx,shot.newy,12)
+		mset(shot.newx, shot.newy, sprite)
+		shot.x = shot.newx
+		shot.y = shot.newy
+
+		--retract mode
+	elseif shot.variant == 1 and shot.retract then
+		if is_tile(bullet, shot.newx, shot.newy) then
+			--		printh("bullet, x:"..shot.x.." y:"..shot.y.."new "..shot.newx.."x"..shot.newy)
+			mset(shot.x, shot.y, 0)
+			shot.x = shot.newx
+			shot.y = shot.newy
+		elseif is_tile(cannon, shot.newx, shot.newy) then
+			--		printh("cannon! removing, x:"..shot.x.." y:"..shot.y.."new "..shot.newx.."x"..shot.newy)
+			if (not is_tile(cannon, shot.x, shot.y)) mset(shot.x, shot.y, 14) del(shots, shot)
+		end
+
+		--shootable hit
+	elseif is_tile(shootable, shot.newx, shot.newy) then
+		mset(shot.x, shot.y, 0)
+		mset(shot.newx, shot.newy, 12)
 		sfx(9)
-		if (shot.variant==1) then 
-			shot.retract=true
-		else	
-			del(shots,shot)
- 	end
---explodable hit 
-	elseif(is_tile(explodable,shot.newx,shot.newy)) then
-		mset(shot.x,shot.y,0)
-		explosion(shot.newx,shot.newy)
+		if shot.variant == 1 then
+			shot.retract = true
+		else
+			del(shots, shot)
+		end
+		--explodable hit
+	elseif is_tile(explodable, shot.newx, shot.newy) then
+		mset(shot.x, shot.y, 0)
+		explosion(shot.newx, shot.newy)
 		sfx(10)
-		if (shot.variant==1) then 
-			shot.retract=true
-		else	
-			del(shots,shot)
- 	end
-
-
+		if shot.variant == 1 then
+			shot.retract = true
+		else
+			del(shots, shot)
+		end
 	else
---		printh("shot: "..shot.x.."x"..shot.y.." pl: "..p.x.."x"..p.y)
-			if (shot.x == p.x and shot.y == p.y)	then 
-				mset(shot.x,shot.y,0)
-			else --perish anim only if empty or bullet at xy
-				if (mget(shot.x,shot.y) == 0 or is_tile(bullet, shot.x, shot.y)) mset(shot.x,shot.y,12) 
-			end
-		if (shot.variant==1) then 
-			shot.retract=true
-		else	
-			del(shots,shot)
- 	end
+		--		printh("shot: "..shot.x.."x"..shot.y.." pl: "..p.x.."x"..p.y)
+		if shot.x == p.x and shot.y == p.y then
+			mset(shot.x, shot.y, 0)
+		else
+			--perish anim only if empty or bullet at xy
+			if (mget(shot.x, shot.y) == 0 or is_tile(bullet, shot.x, shot.y)) mset(shot.x, shot.y, 12)
+		end
+		if shot.variant == 1 then
+			shot.retract = true
+		else
+			del(shots, shot)
+		end
 	end
 
-
---	printh("mset("..(shot.x*8)..","..(shot.y*8)..","..sprite..")")
+	--	printh("mset("..(shot.x*8)..","..(shot.y*8)..","..sprite..")")
 end
 
-function explosion(x,y)
-	mset(x,y,12)
-	
-	for i=-1,1 do
-		for j=-1,1 do 
-		if (is_tile(destructable, x+i,y+j) or can_move(x+i,y+j)) then 
-			mset(x+i,y+j,12)
-		elseif (is_tile(explodable, x+i,y+j)) then
-			explosion(x+i,y+j)
-		end	
+function explosion(x, y)
+	mset(x, y, 12)
+
+	for i = -1, 1 do
+		for j = -1, 1 do
+			if is_tile(destructable, x + i, y + j) or can_move(x + i, y + j) then
+				mset(x + i, y + j, 12)
+			elseif is_tile(explodable, x + i, y + j) then
+				explosion(x + i, y + j)
+			end
 		end
 	end
---	
+	--
 end
 
 function progress_trail(shot)
-	new = advance_in_direction(shot.x,shot.y,shot.direction)
-		if (shot.retract) then
-			--invert delta :)
---			new.x = shot.x + ((new.x - shot.x) * (-1))
---			new.y = shot.y + ((new.y - shot.y) * (-1))
-			if (shot.direction == "⬆️") then shot.newy+=1
-			elseif (shot.direction == "⬇️") then shot.newy-=1
-			elseif (shot.direction == "⬅️") then shot.newx+=1
-			elseif (shot.direction == "➡️") then shot.newx-=1
-			end
-		else
-			shot.newx=new.x
-			shot.newy=new.y
+	new = advance_in_direction(shot.x, shot.y, shot.direction)
+	if shot.retract then
+		--invert delta :)
+		--			new.x = shot.x + ((new.x - shot.x) * (-1))
+		--			new.y = shot.y + ((new.y - shot.y) * (-1))
+		if shot.direction == "⬆️" then
+			shot.newy += 1
+		elseif shot.direction == "⬇️" then
+			shot.newy -= 1
+		elseif shot.direction == "⬅️" then
+			shot.newx += 1
+		elseif shot.direction == "➡️" then
+			shot.newx -= 1
 		end
---printh("shots: "..#shots.." x:"..shot.x.." y:"..shot.y)
+	else
+		shot.newx = new.x
+		shot.newy = new.y
+	end
+	--printh("shots: "..#shots.." x:"..shot.x.." y:"..shot.y)
 end
- 
 
 function update_bullets()
-
-	foreach(shots, 
-		function(shot) 
---			printh("x"..shot.x.."y"..shot.y.." dir:"..shot.direction)
-   progress_trail(shot) 
-   draw_bullet(shot)
+	foreach(
+		shots,
+		function(shot)
+			--			printh("x"..shot.x.."y"..shot.y.." dir:"..shot.direction)
+			progress_trail(shot)
+			draw_bullet(shot)
 		end
 	)
-	
 end
 
-function advance_in_direction(x,y,dir)
-	if (dir == "⬆️") then y-=1
-	elseif (dir == "⬇️") then y+=1
-	elseif (dir == "⬅️") then x-=1
-	elseif (dir == "➡️") then x+=1
-	else return false
+function advance_in_direction(x, y, dir)
+	if dir == "⬆️" then
+		y -= 1
+	elseif dir == "⬇️" then
+		y += 1
+	elseif dir == "⬅️" then
+		x -= 1
+	elseif dir == "➡️" then
+		x += 1
+	else
+		return false
+	end
+	newxy = { x = x, y = y }
+	return newxy
 end
-	newxy={x=x,y=y}
-return newxy
-end
+
 __gfx__
 00000000006007000060070000600700006007000060070000607000006007000007060000700600000000000000000007000000070007700700000000000000
 00000000066777700667777006677770066777700667777006677700066777000077766000777660000000000000000076700070767076677670077007000000
